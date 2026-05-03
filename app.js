@@ -376,34 +376,51 @@ function drawCharts(r){
 $("exportCsv").onclick=()=>{
   if(!lastResult) return;
   const r=lastResult;
+  const sep=";"; // mejor compatibilidad con Excel en español
+  const q = v => `"${String(v).replace(/"/g,'""')}"`;
   const lines=[
-    `FVP Jump Profile`,
-    `Atleta,${session.athlete}`,
-    `Fecha,${session.date}`,
-    `Body mass (kg),${session.body_mass}`,
-    `Hpo (m),${session.hpo}`,
-    `alpha (deg),${session.alpha}`,
+    `# ===== FVP Jump Profile - Informe =====`,
+    `# Generado: ${new Date().toLocaleString()}`,
+    `# Metodo: Samozino simplificado (SJ con cargas)`,
     ``,
-    `Indicador,Valor`,
-    `Fo (N),${r.Fo.toFixed(2)}`,
-    `Fo (N/kg),${r.Fo_kg.toFixed(3)}`,
-    `Vo (m/s),${r.Vo.toFixed(3)}`,
-    `Sfv (N.s/m),${r.Sfv.toFixed(3)}`,
-    `Sfv (N.s/m/kg),${r.Sfv_kg.toFixed(4)}`,
-    `Pmax (W),${r.Pmax.toFixed(2)}`,
-    `Pmax (W/kg),${r.Pmax_kg.toFixed(3)}`,
-    `Sfv opt (N.s/m/kg),${r.Sfv_opt_kg.toFixed(4)}`,
-    `FVimb (% optimo),${(r.FVimb_ratio*100).toFixed(2)}`,
-    `Desbalance (%),${r.FVimb_pct.toFixed(2)}`,
-    `r2,${r.r2.toFixed(4)}`,
-    `Recomendacion,${r.recommendation}`,
+    `## Datos de la sesion`,
+    `Campo${sep}Valor`,
+    `Atleta${sep}${q(session.athlete||"-")}`,
+    `Fecha${sep}${q(session.date)}`,
+    `Body mass (kg)${sep}${session.body_mass}`,
+    `Hpo (m)${sep}${session.hpo}`,
+    `Alpha (deg)${sep}${session.alpha}`,
     ``,
-    `# F (N),V (m/s),P (W)`,
-    ...r.F.map((f,i)=>`${i+1},${f.toFixed(2)},${r.V[i].toFixed(3)},${r.P[i].toFixed(2)}`)
+    `## Resultados`,
+    `Indicador${sep}Valor${sep}Unidad`,
+    `Fo${sep}${r.Fo.toFixed(2)}${sep}N`,
+    `Fo (relativa)${sep}${r.Fo_kg.toFixed(3)}${sep}N/kg`,
+    `Vo${sep}${r.Vo.toFixed(3)}${sep}m/s`,
+    `Sfv${sep}${r.Sfv.toFixed(3)}${sep}N.s/m`,
+    `Sfv (relativa)${sep}${r.Sfv_kg.toFixed(4)}${sep}N.s/m/kg`,
+    `Pmax${sep}${r.Pmax.toFixed(2)}${sep}W`,
+    `Pmax (relativa)${sep}${r.Pmax_kg.toFixed(3)}${sep}W/kg`,
+    `Sfv optima${sep}${r.Sfv_opt_kg.toFixed(4)}${sep}N.s/m/kg`,
+    `FVimb (% del optimo)${sep}${(r.FVimb_ratio*100).toFixed(2)}${sep}%`,
+    `Desbalance${sep}${r.FVimb_pct.toFixed(2)}${sep}%`,
+    `r2${sep}${r.r2.toFixed(4)}${sep}-`,
+    `Recomendacion${sep}${q(r.recommendation)}${sep}`,
+    ``,
+    `## Datos por condicion (calculo)`,
+    `#${sep}F (N)${sep}V (m/s)${sep}P (W)`,
+    ...r.F.map((f,i)=>`${i+1}${sep}${f.toFixed(2)}${sep}${r.V[i].toFixed(3)}${sep}${r.P[i].toFixed(2)}`),
+    ``,
+    `## Ensayos crudos`,
+    `Fila${sep}Add. mass (kg)${sep}H1 (m)${sep}H2 (m)${sep}H3 (m)${sep}Hmax (m)`,
+    ...session.trials.map((t,i)=>{
+      const h=hmaxOf(t);
+      return `${i+1}${sep}${t.add_mass??""}${sep}${t.h1??""}${sep}${t.h2??""}${sep}${t.h3??""}${sep}${h!=null?h.toFixed(3):""}`;
+    })
   ];
-  const blob=new Blob([lines.join("\n")],{type:"text/csv"});
+  // BOM para que Excel detecte UTF-8
+  const blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download=`FVP_${(session.athlete||"session").replace(/\s+/g,"_")}.csv`; a.click();
+  a.download=`FVP_${(session.athlete||"session").replace(/\s+/g,"_")}_informe.csv`; a.click();
 };
 
 $("exportPdf").onclick=async ()=>{
@@ -411,37 +428,126 @@ $("exportPdf").onclick=async ()=>{
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
   const r=lastResult;
-  pdf.setFontSize(14); pdf.setFont(undefined,"bold");
-  pdf.text(`FVP Jump Profile — ${session.athlete||"-"}`,15,15);
-  pdf.setFontSize(10); pdf.setFont(undefined,"normal");
-  pdf.text(`Fecha: ${session.date}    BM: ${session.body_mass} kg    Hpo: ${session.hpo} m    α: ${session.alpha}°`,15,22);
-  let y=32;
-  const rows=[
-    ["Fo (N)",r.Fo.toFixed(0),"Fo (N/kg)",r.Fo_kg.toFixed(2)],
-    ["Vo (m/s)",r.Vo.toFixed(2),"r²",r.r2.toFixed(3)],
-    ["Pmax (W)",r.Pmax.toFixed(0),"Pmax (W/kg)",r.Pmax_kg.toFixed(2)],
-    ["Sfv (N·s/m/kg)",r.Sfv_kg.toFixed(3),"Sfv óptima",r.Sfv_opt_kg.toFixed(3)],
-    ["FVimb (% óptimo)",`${(r.FVimb_ratio*100).toFixed(1)} %`,"Desbalance",`${r.FVimb_pct.toFixed(1)} %`],
-  ];
-  pdf.setFontSize(11);
-  rows.forEach(row=>{
-    pdf.setFont(undefined,"bold"); pdf.text(row[0],15,y);
-    pdf.setFont(undefined,"normal"); pdf.text(String(row[1]),65,y);
-    pdf.setFont(undefined,"bold"); pdf.text(row[2],110,y);
-    pdf.setFont(undefined,"normal"); pdf.text(String(row[3]),160,y);
-    y+=7;
-  });
-  y+=4;
-  pdf.setFont(undefined,"bold"); pdf.text("Recomendación:",15,y);
-  pdf.setFont(undefined,"normal"); pdf.text(r.recommendation,55,y); y+=10;
+  const W = 210, H = 297;
+  const PRIMARY=[31,119,180], DARK=[21,90,138], MUTED=[107,114,128],
+        OK=[21,128,61], WARN=[180,83,9], ERR=[220,38,38],
+        LIGHT=[245,247,250], BORDER=[229,231,235];
 
-  // gráficos como imagen
+  /* ===== Cabecera con banda de color ===== */
+  pdf.setFillColor(...PRIMARY);
+  pdf.rect(0,0,W,28,"F");
+  pdf.setTextColor(255);
+  pdf.setFont("helvetica","bold"); pdf.setFontSize(20);
+  pdf.text("FVP Jump Profile", 14, 14);
+  pdf.setFont("helvetica","normal"); pdf.setFontSize(10);
+  pdf.text("Perfil Fuerza-Velocidad-Potencia  -  metodo de Samozino", 14, 21);
+  pdf.setFontSize(9);
+  pdf.text(`Generado: ${new Date().toLocaleString()}`, W-14, 21, {align:"right"});
+
+  /* ===== Datos del atleta ===== */
+  let y = 38;
+  pdf.setTextColor(...DARK); pdf.setFont("helvetica","bold"); pdf.setFontSize(12);
+  pdf.text("Datos del atleta", 14, y); y+=2;
+  pdf.setDrawColor(...PRIMARY); pdf.setLineWidth(0.6); pdf.line(14,y,W-14,y); y+=6;
+
+  pdf.setFillColor(...LIGHT); pdf.rect(14,y-4,W-28,18,"F");
+  pdf.setTextColor(...MUTED); pdf.setFontSize(8);
+  const heads = ["ATLETA","FECHA","BODY MASS","Hpo","ALPHA"];
+  const vals  = [session.athlete||"-", session.date,
+                 `${session.body_mass} kg`, `${session.hpo} m`, `${session.alpha} deg`];
+  const colW = (W-28)/5;
+  heads.forEach((h,i)=>pdf.text(h, 16+colW*i, y));
+  pdf.setTextColor(30,30,30); pdf.setFont("helvetica","bold"); pdf.setFontSize(11);
+  vals.forEach((v,i)=>pdf.text(String(v), 16+colW*i, y+7));
+  y += 22;
+
+  /* ===== Recomendacion (banner) ===== */
+  const isOk = r.recommendation.toLowerCase().includes("balanced");
+  const isStrengthDef = r.recommendation.includes("FUERZA");
+  const recColor = isOk?OK : isStrengthDef?ERR : WARN;
+  pdf.setFillColor(...recColor);
+  pdf.roundedRect(14,y,W-28,12,2,2,"F");
+  pdf.setTextColor(255); pdf.setFont("helvetica","bold"); pdf.setFontSize(11);
+  pdf.text(r.recommendation.replace(/[^\x00-\x7F]/g,""), W/2, y+8, {align:"center"});
+  y += 18;
+
+  /* ===== KPIs en tarjetas ===== */
+  pdf.setTextColor(...DARK); pdf.setFont("helvetica","bold"); pdf.setFontSize(12);
+  pdf.text("Indicadores principales", 14, y); y+=2;
+  pdf.setDrawColor(...PRIMARY); pdf.line(14,y,W-14,y); y+=5;
+
+  const kpis = [
+    ["Fo",        `${r.Fo.toFixed(0)} N`,            `${r.Fo_kg.toFixed(2)} N/kg`],
+    ["Vo",        `${r.Vo.toFixed(2)} m/s`,          ""],
+    ["Pmax",      `${r.Pmax.toFixed(0)} W`,          `${r.Pmax_kg.toFixed(2)} W/kg`],
+    ["FVimb",     `${(r.FVimb_ratio*100).toFixed(1)} %`, `desbal. ${r.FVimb_pct.toFixed(1)}%`],
+    ["Sfv",       `${r.Sfv_kg.toFixed(3)}`,          "N.s/m/kg"],
+    ["Sfv opt.",  `${r.Sfv_opt_kg.toFixed(3)}`,      "N.s/m/kg"],
+    ["r2",        `${r.r2.toFixed(3)}`,              "ajuste"],
+  ];
+  const cols = 4, cw = (W-28-(cols-1)*4)/cols, ch = 18;
+  kpis.forEach((k,i)=>{
+    const cx = 14 + (i%cols)*(cw+4);
+    const cy = y + Math.floor(i/cols)*(ch+4);
+    pdf.setFillColor(...LIGHT); pdf.setDrawColor(...BORDER);
+    pdf.roundedRect(cx,cy,cw,ch,1.5,1.5,"FD");
+    pdf.setTextColor(...MUTED); pdf.setFont("helvetica","bold"); pdf.setFontSize(7);
+    pdf.text(k[0].toUpperCase(), cx+3, cy+5);
+    pdf.setTextColor(...PRIMARY); pdf.setFontSize(13);
+    pdf.text(k[1], cx+3, cy+12);
+    pdf.setTextColor(...MUTED); pdf.setFont("helvetica","normal"); pdf.setFontSize(7);
+    pdf.text(k[2], cx+3, cy+16);
+  });
+  y += Math.ceil(kpis.length/cols)*(ch+4) + 4;
+
+  /* ===== Graficos ===== */
+  pdf.setTextColor(...DARK); pdf.setFont("helvetica","bold"); pdf.setFontSize(12);
+  pdf.text("Graficas", 14, y); y+=2;
+  pdf.setDrawColor(...PRIMARY); pdf.line(14,y,W-14,y); y+=4;
+
   const fvImg = $("fvChart").toDataURL("image/png",1.0);
   const pvImg = $("pvChart").toDataURL("image/png",1.0);
-  pdf.addImage(fvImg,"PNG",15,y,180,90); y+=95;
-  pdf.addImage(pvImg,"PNG",15,y,180,90);
+  // dos imagenes lado a lado
+  const gw = (W-28-6)/2, gh = 70;
+  pdf.addImage(fvImg,"PNG",14,y,gw,gh);
+  pdf.addImage(pvImg,"PNG",14+gw+6,y,gw,gh);
+  y += gh + 6;
 
-  pdf.save(`FVP_${(session.athlete||"session").replace(/\s+/g,"_")}.pdf`);
+  /* ===== Tabla detalle ===== */
+  if (y > H-70) { pdf.addPage(); y=20; }
+  pdf.setTextColor(...DARK); pdf.setFont("helvetica","bold"); pdf.setFontSize(12);
+  pdf.text("Detalle por condicion", 14, y); y+=2;
+  pdf.setDrawColor(...PRIMARY); pdf.line(14,y,W-14,y); y+=5;
+
+  const headersT = ["#","F (N)","V (m/s)","P (W)"];
+  const colT = [12,40,40,40];
+  const x0 = 14;
+  pdf.setFillColor(...PRIMARY); pdf.rect(x0,y,colT.reduce((a,b)=>a+b,0),7,"F");
+  pdf.setTextColor(255); pdf.setFont("helvetica","bold"); pdf.setFontSize(9);
+  let cx=x0+2;
+  headersT.forEach((h,i)=>{ pdf.text(h,cx,y+5); cx+=colT[i]; });
+  y+=7;
+  pdf.setTextColor(30,30,30); pdf.setFont("helvetica","normal");
+  for(let i=0;i<r.F.length;i++){
+    if (i%2===0){ pdf.setFillColor(...LIGHT); pdf.rect(x0,y,colT.reduce((a,b)=>a+b,0),6,"F"); }
+    cx=x0+2;
+    [String(i+1), r.F[i].toFixed(1), r.V[i].toFixed(3), r.P[i].toFixed(1)].forEach((v,j)=>{
+      pdf.text(v,cx,y+4); cx+=colT[j];
+    });
+    y+=6;
+  }
+
+  /* ===== Pie ===== */
+  const total = pdf.internal.getNumberOfPages();
+  for(let p=1;p<=total;p++){
+    pdf.setPage(p);
+    pdf.setDrawColor(...BORDER); pdf.line(14, H-14, W-14, H-14);
+    pdf.setTextColor(...MUTED); pdf.setFont("helvetica","normal"); pdf.setFontSize(8);
+    pdf.text("FVP Jump Profile  -  vgarrido1995.github.io/samozino-fvp", 14, H-9);
+    pdf.text(`Pagina ${p} / ${total}`, W-14, H-9, {align:"right"});
+  }
+
+  pdf.save(`FVP_${(session.athlete||"session").replace(/\s+/g,"_")}_informe.pdf`);
 };
 
 /* --------------------- init --------------------- */
