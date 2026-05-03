@@ -92,3 +92,24 @@ a:hover{text-decoration:underline}
 .muted{color:var(--muted);font-size:.88rem;font-style:italic}
 
 footer{text-align:center;padding:20px;color:var(--muted);font-size:.85rem}
+
+/* ---- Descargas ---- */
+.download-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0}
+@media(max-width:760px){.download-grid{grid-template-columns:1fr}}
+.dl-card{background:#f9fafb;border:1px solid var(--border);border-radius:10px;padding:20px;
+  display:flex;flex-direction:column}
+.dl-card h3{margin:6px 0 4px;color:var(--primary-dark)}
+.dl-icon{font-size:2.4rem;line-height:1}
+.dl-tag{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);font-weight:600;margin:0 0 8px}
+.dl-card p{margin:6px 0}
+.dl-btn{display:inline-block;text-align:center;text-decoration:none;
+  padding:10px 14px;border-radius:6px;font-weight:600;font-size:.95rem;
+  margin:8px 0 0;border:1px solid var(--border)}
+.dl-btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.dl-btn.primary:hover{background:var(--primary-dark);text-decoration:none}
+.dl-btn.ghost{background:#fff;color:var(--primary)}
+.dl-btn.ghost:hover{background:#f3f4f6;text-decoration:none}
+details{margin-top:10px;font-size:.88rem}
+details summary{cursor:pointer;font-weight:600;color:var(--primary);padding:4px 0}
+details p,details ol,details pre{margin:6px 0}

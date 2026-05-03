@@ -20,6 +20,7 @@
   <button class="tab" data-tab="resultados">📊 2. Resultados</button>
   <button class="tab" data-tab="instrucciones">📖 Instrucciones</button>
   <button class="tab" data-tab="estudios">📚 Estudios</button>
+  <button class="tab" data-tab="descargas">⬇️ Descargas</button>
 </nav>
 
 <main>
@@ -219,6 +220,86 @@ FVimb = Sfv / Sfv_opt</pre>
   </ul>
 
   <p class="muted">Esta app es una herramienta docente y de soporte. No sustituye juicio profesional.</p>
+</section>
+
+<!-- ============ DESCARGAS ============ -->
+<section id="descargas" class="panel">
+  <h2>⬇️ Descargas para usar la app sin internet</h2>
+  <p>Si prefieres trabajar <b>en tu propio computador</b> (modo offline, sin depender de la web),
+  tienes dos opciones según tu perfil técnico:</p>
+
+  <div class="download-grid">
+
+    <div class="dl-card">
+      <div class="dl-icon">🪟</div>
+      <h3>Ejecutable Windows (.exe)</h3>
+      <p class="dl-tag">Para usuarios — sin instalar nada</p>
+      <p>Descarga un único archivo <code>.exe</code> de ~80 MB y haz doble click.
+      <b>No necesitas Python</b>, ni librerías, ni configuración. Funciona en
+      Windows 10/11 (64 bits).</p>
+      <a class="dl-btn primary"
+         href="https://github.com/vgarrido1995/samozino-fvp-app/releases/latest/download/FVP_Jump_Profile.exe">
+         ⬇️ Descargar FVP_Jump_Profile.exe
+      </a>
+      <details>
+        <summary>⚠️ Aviso de Windows SmartScreen</summary>
+        <p>Como el ejecutable no está firmado digitalmente (firma de pago), la primera vez Windows
+        puede mostrar un aviso azul: pulsa <b>Más información → Ejecutar de todas formas</b>.
+        Es un comportamiento normal para apps personales / open source.</p>
+      </details>
+      <details>
+        <summary>📦 Otras releases</summary>
+        <p>Histórico completo en
+        <a target="_blank" href="https://github.com/vgarrido1995/samozino-fvp-app/releases">
+        github.com/vgarrido1995/samozino-fvp-app/releases</a>.</p>
+      </details>
+    </div>
+
+    <div class="dl-card">
+      <div class="dl-icon">🐍</div>
+      <h3>Código Python (para VS Code / IDE)</h3>
+      <p class="dl-tag">Para desarrolladores — modificable</p>
+      <p>Descarga el código fuente en Python (Tkinter). Lo puedes abrir con
+      <b>Visual Studio Code</b>, <b>PyCharm</b> o cualquier editor, modificarlo y
+      ejecutarlo en tu equipo.</p>
+      <a class="dl-btn primary"
+         href="https://github.com/vgarrido1995/samozino-fvp-app/archive/refs/heads/main.zip">
+         ⬇️ Descargar código (.zip)
+      </a>
+      <a class="dl-btn ghost"
+         target="_blank"
+         href="https://github.com/vgarrido1995/samozino-fvp-app">
+         🔗 Ver repositorio en GitHub
+      </a>
+      <details>
+        <summary>▶️ Cómo ejecutarlo</summary>
+        <ol>
+          <li>Descomprime el ZIP.</li>
+          <li>Doble click a <code>run.bat</code> (instala dependencias y arranca la app).</li>
+        </ol>
+        <p>O manualmente desde terminal:</p>
+        <pre>pip install -r requirements.txt
+python fvp_app.py</pre>
+        <p>Requiere Python 3.9+.</p>
+      </details>
+    </div>
+
+  </div>
+
+  <h3>¿Cuál elijo?</h3>
+  <table class="refs">
+    <thead><tr><th></th><th>🪟 .exe</th><th>🐍 Código Python</th></tr></thead>
+    <tbody>
+      <tr><td>Necesitas Python instalado</td><td>❌ No</td><td>✅ Sí (3.9+)</td></tr>
+      <tr><td>Puedes modificar la app</td><td>❌ No</td><td>✅ Sí</td></tr>
+      <tr><td>Tamaño descarga</td><td>~80 MB</td><td>~60 KB</td></tr>
+      <tr><td>Tiempo de arranque</td><td>10–20 s primera vez</td><td>1–3 s</td></tr>
+      <tr><td>Plataforma</td><td>Solo Windows</td><td>Windows / Mac / Linux</td></tr>
+    </tbody>
+  </table>
+
+  <p class="muted">Las dos versiones offline calculan exactamente lo mismo que esta web,
+  con interfaz Tkinter (escritorio) en lugar de navegador.</p>
 </section>
 </main>
 
