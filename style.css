@@ -15,8 +15,20 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,san
   background:var(--bg);color:var(--text);line-height:1.5}
 header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;
   padding:20px 24px}
+.header-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  max-width:1200px;margin:0 auto;flex-wrap:wrap}
+.header-left{flex:1 1 420px;min-width:0}
 header h1{margin:0;font-size:1.8rem}
-.subtitle{margin:4px 0 0;opacity:.9;font-size:.95rem}
+.subtitle{margin:4px 0 0;opacity:.92;font-size:.95rem;max-width:680px}
+.header-right{text-align:right;font-size:.9rem;line-height:1.35}
+.header-right .author{font-weight:600}
+.header-right .site{color:#fff;text-decoration:none;border-bottom:1px dashed rgba(255,255,255,.6);
+  opacity:.95;font-size:.88rem}
+.header-right .site:hover{opacity:1;border-bottom-style:solid;text-decoration:none}
+@media(max-width:600px){
+  .header-right{text-align:left;width:100%}
+  header h1{font-size:1.5rem}
+}
 
 .tabs{display:flex;gap:0;background:#fff;border-bottom:2px solid var(--border);
   padding:0 16px;overflow-x:auto}

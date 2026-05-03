@@ -442,6 +442,7 @@ $("exportPdf").onclick=async ()=>{
   pdf.setFont("helvetica","normal"); pdf.setFontSize(10);
   pdf.text("Perfil Fuerza-Velocidad-Potencia  -  metodo de Samozino", 14, 21);
   pdf.setFontSize(9);
+  pdf.text("Victor Garrido Osorio  -  garridosportech.cl", W-14, 14, {align:"right"});
   pdf.text(`Generado: ${new Date().toLocaleString()}`, W-14, 21, {align:"right"});
 
   /* ===== Datos del atleta ===== */
@@ -543,7 +544,7 @@ $("exportPdf").onclick=async ()=>{
     pdf.setPage(p);
     pdf.setDrawColor(...BORDER); pdf.line(14, H-14, W-14, H-14);
     pdf.setTextColor(...MUTED); pdf.setFont("helvetica","normal"); pdf.setFontSize(8);
-    pdf.text("FVP Jump Profile  -  vgarrido1995.github.io/samozino-fvp", 14, H-9);
+    pdf.text("Victor Garrido Osorio  -  garridosportech.cl  -  vgarrido1995.github.io/samozino-fvp", 14, H-9);
     pdf.text(`Pagina ${p} / ${total}`, W-14, H-9, {align:"right"});
   }
 
