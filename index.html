@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FVP Jump Profile — Samozino</title>
+<meta name="description" content="Perfil Fuerza-Velocidad-Potencia en salto vertical (método Samozino). 100% web, sin instalar nada." />
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>🦘 FVP Jump Profile</h1>
+  <p class="subtitle">Perfil Fuerza-Velocidad-Potencia · método de Samozino · 100% en tu navegador</p>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab active" data-tab="datos">📝 1. Datos</button>
+  <button class="tab" data-tab="resultados">📊 2. Resultados</button>
+  <button class="tab" data-tab="instrucciones">📖 Instrucciones</button>
+  <button class="tab" data-tab="estudios">📚 Estudios</button>
+</nav>
+
+<main>
+<!-- ============ DATOS ============ -->
+<section id="datos" class="panel active">
+  <div class="row">
+    <div>
+      <label>Atleta</label>
+      <input type="text" id="athlete" placeholder="Nombre" />
+    </div>
+    <div>
+      <label>Fecha</label>
+      <input type="text" id="date" />
+    </div>
+    <div>
+      <label>α (°) <small>90 = vertical puro</small></label>
+      <input type="number" id="alpha" value="90" min="10" max="90" step="1" />
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label>Body mass (kg)</label>
+      <input type="number" id="bm" min="0" step="0.5" placeholder="78" />
+    </div>
+    <div>
+      <label>Hpo — push-off distance (m) <small>0.30 – 0.45</small></label>
+      <input type="number" id="hpo" min="0" step="0.01" placeholder="0.40" />
+    </div>
+    <div>
+      <label>Cargar arquetipo</label>
+      <select id="archetype">
+        <option value="">— elegir —</option>
+      </select>
+    </div>
+  </div>
+
+  <h3>Condiciones de carga (best of 3 saltos, en metros)</h3>
+  <div class="table-wrap">
+    <table id="trials">
+      <thead>
+        <tr><th>#</th><th>Add. mass (kg)</th><th>H1 (m)</th><th>H2 (m)</th><th>H3 (m)</th><th>Hmax</th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="actions">
+    <button id="addRow">➕ Añadir fila</button>
+    <button id="reset" class="ghost">🗑 Reset</button>
+    <button id="saveJson" class="ghost">💾 Guardar JSON</button>
+    <label class="filebtn ghost">
+      📂 Cargar JSON
+      <input type="file" id="loadJson" accept="application/json" hidden />
+    </label>
+  </div>
+
+  <div id="validation"></div>
+
+  <button id="compute" class="primary big">🚀 Calcular</button>
+</section>
+
+<!-- ============ RESULTADOS ============ -->
+<section id="resultados" class="panel">
+  <div id="noResults" class="info">Aún no hay resultados. Ve a la pestaña <b>Datos</b>, rellena y pulsa <b>Calcular</b>.</div>
+  <div id="resultsContent" hidden>
+    <div class="kpis">
+      <div class="kpi"><div class="k-label">Fo (N)</div><div class="k-val" id="kpi-fo">—</div><div class="k-sub" id="kpi-fokg"></div></div>
+      <div class="kpi"><div class="k-label">Vo (m/s)</div><div class="k-val" id="kpi-vo">—</div></div>
+      <div class="kpi"><div class="k-label">Pmax (W)</div><div class="k-val" id="kpi-pmax">—</div><div class="k-sub" id="kpi-pmaxkg"></div></div>
+      <div class="kpi"><div class="k-label">FVimb (% óptimo)</div><div class="k-val" id="kpi-fvimb">—</div><div class="k-sub" id="kpi-fvimb-pct"></div></div>
+      <div class="kpi"><div class="k-label">Sfv (N·s/m/kg)</div><div class="k-val" id="kpi-sfv">—</div></div>
+      <div class="kpi"><div class="k-label">Sfv óptima</div><div class="k-val" id="kpi-sfvopt">—</div></div>
+      <div class="kpi"><div class="k-label">r²</div><div class="k-val" id="kpi-r2">—</div></div>
+    </div>
+
+    <div id="reco" class="banner"></div>
+
+    <div class="charts">
+      <div class="chart-box"><canvas id="fvChart"></canvas></div>
+      <div class="chart-box"><canvas id="pvChart"></canvas></div>
+    </div>
+
+    <h3>Detalle por condición válida</h3>
+    <div class="table-wrap">
+      <table id="detail">
+        <thead><tr><th>#</th><th>F (N)</th><th>V (m/s)</th><th>P (W)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="actions">
+      <button id="exportCsv">📥 CSV</button>
+      <button id="exportPdf">📄 PDF</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTRUCCIONES ============ -->
+<section id="instrucciones" class="panel">
+  <h2>📖 Instrucciones de uso</h2>
+
+  <h3>1. Atleta y sesión</h3>
+  <ul>
+    <li><b>Body mass (kg)</b>: masa corporal del atleta.</li>
+    <li><b>Hpo (m)</b>: distancia de empuje vertical, medida <b>una sola vez</b> por atleta.
+      <br>Con cinta métrica: distancia entre el <b>trocánter mayor</b> en posición baja del SJ
+      (rodilla ~90°) y el trocánter en <b>extensión completa de pie con tobillo en flexión plantar máxima</b>.
+      Típico <b>0.30 – 0.45 m</b>.</li>
+    <li><b>α (°)</b>: ángulo de empuje. Deja <b>90</b> (vertical puro) salvo investigación específica.</li>
+  </ul>
+
+  <h3>2. Condiciones de carga</h3>
+  <ul>
+    <li>Realiza el SJ con varias cargas. Mínimo <b>2</b>, recomendado <b>5–6</b>.</li>
+    <li>Ejemplo: 0% BW, +20%, +40%, +60%, +80%, +100% BW de masa adicional.</li>
+    <li>Por cada condición, <b>3 intentos</b> (se toma el mejor como Hmax).</li>
+    <li>Las alturas se introducen en <b>metros</b> (p.ej. 0.42, no 42).</li>
+    <li>Si tienes plataforma de contactos: <code>Hmax = g · tv² / 8</code>.</li>
+  </ul>
+
+  <h3>3. Cálculo</h3>
+  <p>La app ajusta <code>F = Fo + Sfv · V</code> por mínimos cuadrados y calcula:</p>
+  <ul>
+    <li><b>Fo</b>, <b>Vo = -Fo/Sfv</b>, <b>Pmax = Fo·Vo/4</b>.</li>
+    <li><b>Sfv óptima</b> según Samozino 2012 (depende de Pmax/kg, Hpo y α).</li>
+    <li><b>FVimb = Sfv / Sfv_opt</b> expresado en % del óptimo.</li>
+  </ul>
+
+  <h3>4. Lectura de resultados</h3>
+  <ul>
+    <li>🟢 <b>Well balanced</b>: FVimb dentro de ±10% del óptimo.</li>
+    <li>🔴 <b>Déficit de FUERZA</b>: FVimb &lt; 90% → entrenar fuerza.</li>
+    <li>🟠 <b>Déficit de VELOCIDAD</b>: FVimb &gt; 110% → entrenar velocidad/potencia.</li>
+    <li>r² &lt; 0.95 → revisa la ejecución técnica.</li>
+    <li>CV &gt; 5% entre los 3 intentos → ejecución inconsistente.</li>
+  </ul>
+
+  <h3>5. Errores comunes</h3>
+  <ul>
+    <li>❌ Introducir altura en cm (30) en vez de metros (0.30).</li>
+    <li>❌ Olvidar Hpo (queda en 0).</li>
+    <li>⚠️ Solo 2 condiciones → resultado poco fiable.</li>
+  </ul>
+
+  <h3>Fórmulas clave</h3>
+  <pre>F = m_total · g · (Hmax / Hpo + 1)
+V = √(g · Hmax / 2)
+Vo = -Fo / Sfv
+Pmax = Fo · Vo / 4
+FVimb = Sfv / Sfv_opt</pre>
+</section>
+
+<!-- ============ ESTUDIOS ============ -->
+<section id="estudios" class="panel">
+  <h2>📚 Bases científicas</h2>
+  <p>La aplicación implementa el <b>método simplificado de Samozino</b> para estimar el perfil
+  Fuerza-Velocidad-Potencia en movimientos balísticos del miembro inferior, así como la
+  determinación del perfil F-v <b>óptimo</b> y el desequilibrio (FVimb).</p>
+
+  <h3>Referencias principales</h3>
+  <table class="refs">
+    <thead><tr><th>Año</th><th>Autores</th><th>Título</th><th>Revista</th><th>Enlace</th></tr></thead>
+    <tbody>
+      <tr><td>2008</td><td>Samozino P. <i>et al.</i></td><td>A simple method for measuring force, velocity and power output during squat jump</td><td><i>J Biomech</i></td>
+        <td><a target="_blank" href="https://www.researchgate.net/publication/23254945">ResearchGate</a></td></tr>
+      <tr><td>2010</td><td>Samozino P. <i>et al.</i></td><td>Jumping ability: A theoretical integrative approach</td><td><i>J Theor Biol</i></td>
+        <td><a target="_blank" href="https://www.researchgate.net/publication/41172792">ResearchGate</a></td></tr>
+      <tr><td>2012</td><td>Samozino P. <i>et al.</i></td><td>Optimal Force-Velocity Profile in Ballistic Movements — Altius: Citius or Fortius?</td><td><i>MSSE</i></td>
+        <td><a target="_blank" href="https://www.researchgate.net/publication/51508458">ResearchGate</a></td></tr>
+      <tr><td>2014</td><td>Samozino P. <i>et al.</i></td><td>F-V Profile: Imbalance Determination and Effect on Lower-Limb Ballistic Performance</td><td><i>IJSM</i></td>
+        <td><a target="_blank" href="https://www.researchgate.net/publication/258522939">ResearchGate</a></td></tr>
+      <tr><td>2016</td><td>Morin J-B & Samozino P.</td><td>Interpreting P-F-V Profiles for Individualized and Specific Training</td><td><i>IJSPP</i></td>
+        <td><a target="_blank" href="https://www.researchgate.net/publication/287995954">ResearchGate</a></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Qué aporta cada estudio</h3>
+  <ul>
+    <li><b>2008</b> — Valida un método sin plataforma de fuerzas: solo masa, Hpo y Hmax.</li>
+    <li><b>2010</b> — Marco teórico integrador del salto vertical.</li>
+    <li><b>2012</b> — Deriva la <b>Sfv óptima</b> que maximiza el desplazamiento del CoM.</li>
+    <li><b>2014</b> — Define <b>FVimb</b> y muestra que reducirlo mejora el rendimiento balístico.</li>
+    <li><b>2016</b> — Guía práctica de interpretación y prescripción de entrenamiento.</li>
+  </ul>
+
+  <h3>Equipo de referencia</h3>
+  <ul>
+    <li><b>Pierre Samozino</b> — Univ. Savoie Mont Blanc</li>
+    <li><b>Jean-Benoît Morin</b> — Univ. Côte d'Azur</li>
+  </ul>
+
+  <h3>Limitaciones</h3>
+  <ul>
+    <li>Asume empuje rectilíneo vertical.</li>
+    <li>Sensible a buena medición de Hpo y Hmax.</li>
+    <li>Mínimo 2 condiciones; idealmente 5–6 para fiabilidad.</li>
+    <li>Validado en SJ (Squat Jump).</li>
+  </ul>
+
+  <p class="muted">Esta app es una herramienta docente y de soporte. No sustituye juicio profesional.</p>
+</section>
+</main>
+
+<footer>
+  <p>MIT © 2026 Victor Garrido · <a href="https://github.com/vgarrido1995/samozino-fvp" target="_blank">código fuente</a></p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
