@@ -212,6 +212,14 @@ Object.keys(ARCHETYPES).forEach(k=>{
 });
 archSel.addEventListener("change",e=>{
   const k=e.target.value; if(!k) return;
+  const hasData = session.athlete || session.body_mass>0 || session.hpo>0 ||
+                  session.trials.some(t=>t.h1||t.h2||t.h3||t.add_mass);
+  if(hasData && !confirm(
+      "Los arquetipos son SOLO EJEMPLOS demostrativos.\n\n"+
+      "Si continúas, se sobrescribirán los datos que ya tienes en la sesión.\n\n"+
+      "¿Cargar el arquetipo de todas formas?")){
+    e.target.value=""; return;
+  }
   const d=ARCHETYPES[k];
   Object.assign(session,{athlete:d.athlete,body_mass:d.body_mass,hpo:d.hpo,alpha:d.alpha,
     trials:d.trials.map(([m,a,b,c])=>({add_mass:m,h1:a,h2:b,h3:c}))});
